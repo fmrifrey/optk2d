@@ -38,7 +38,7 @@ function [G,nramp] = gengrads(sys,kspace)
         end
         ramp2 = [gramp;ramp2];
 
-        gshot = [ramp1;squeeze(g(:,1,:));ramp2];
+        gshot = [ramp1;squeeze(g(:,shotn,:));ramp2];
 
         % append to the end of the array
         if ~isempty(G) && (size(gshot,1)>size(G,1))

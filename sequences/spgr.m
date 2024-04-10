@@ -94,11 +94,11 @@ dur_crusher = length(toppe.readmod('crusher.mod'))*sys.raster + arg.padtime; % u
 toppe.writeentryfile('toppeN.entry');
 
 % Set cores file text
-coresfiletext = [ ...
-    "2 4 1" % tipdown
-    "2 2 4" % fatsat
-    "1 3" % readout
-    ];
+toppe.writecoresfile( {...
+    [4,1], ... % tipdown
+    [2,4], ... % fatsat
+    3 ... % readout
+    })
 
 % Set modules file text
 modulesfiletext = [ ...
@@ -110,7 +110,6 @@ modulesfiletext = [ ...
 
 % Write out cores and modules files
 writemodulesfile(modulesfiletext);
-writecoresfile(coresfiletext);
 
 %% Write the scan loop
 toppe.write2loop('setup',sys,'version',6);

@@ -1,6 +1,10 @@
 function P = L_adj(x)
 % x = image of any dimensions
 
+    % import functions
+    import recon.*
+    import tools.*
+
     % get size
     sz = size(x);
     nd = ndims(x);

@@ -1,3 +1,7 @@
+% import functions
+import recon.*
+import tools.*
+
 % set parameters
 N = 256;
 fov = 24;
@@ -39,16 +43,16 @@ kdata = A_fwd(x_gt,{A},0);
 kdata = awgn(kdata,snr);
 
 % recon
-niter = 600;
+niter = 100;
 tvtype = 'l1';
-lams = [0,10.^(-2:2)];
+lams = [0 1e-2];
 costs = zeros(niter+1,length(lams));
 xs = cell(niter+1,1);
 for i = 1:length(lams)
     fprintf('i=%d/%d\n',i,length(lams));
     [~,costs(:,i),xs{i}] = tvrecon(reshape(klocs,[],1,2), kdata, ...
         'fov', fov, 'N', N, 'smap', smap, 'niter', niter, ...
-        'lam', lams(i), 'type', tvtype, 'L', 3);
+        'lam', lams(i), 'type', tvtype, 'L', 5);
 end
 
 %% Make figures

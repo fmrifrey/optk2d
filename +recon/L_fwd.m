@@ -1,6 +1,10 @@
 function x = L_fwd(P)
 % P = cell array of projection matrices for each dimension
 
+    % import functions
+    import recon.*
+    import tools.*
+    
     % get size
     sz = size(P{1});
     nd = ndims(P);

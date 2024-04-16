@@ -3,6 +3,8 @@ function spgr(kspace,varargin)
 % written in toppe v6 by David Frey
 % kspace = kspace trajectory ([N x Nshots x 3] cm^-1)
 
+import tools.*
+
 %% Set defaults
 if nargin < 1 || isempty(kspace)
     kspace = zeros(500,1,3); % zeros - FID

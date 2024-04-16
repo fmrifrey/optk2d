@@ -2,6 +2,10 @@ function [x_star, cost, x_set] = tvrecon(klocs,kdata,varargin)
 % klocs = [Nk x Nt x Nd]
 % kdata = [Nk x Nc x Nt]
 
+    % import functions
+    import recon.*
+    import tools.*
+
     % define defaults
     defaults = struct( ...
         'fov', [], ... % image fov - Ndx1 vector
@@ -18,6 +22,10 @@ function [x_star, cost, x_set] = tvrecon(klocs,kdata,varargin)
     % parse arguments
     arg = vararg_pair(defaults,varargin);
     
+    % import functions
+    import recon.*
+    import tools.*
+
     % convert N and fov to row vectors
     arg.N = arg.N(:)';
     arg.fov = arg.fov(:)';

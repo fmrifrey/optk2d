@@ -20,6 +20,10 @@ end
 
 function tv = tvnorm_iso(x)
 
+    % import functions
+    import recon.*
+    import tools.*
+
     % get size
     sz = size(x);
     nd = ndims(x);
@@ -43,6 +47,10 @@ function tv = tvnorm_iso(x)
 end
 
 function tv = tvnorm_l1(x)
+
+    % import functions
+    import recon.*
+    import tools.*
 
     % get size
     sz = size(x);

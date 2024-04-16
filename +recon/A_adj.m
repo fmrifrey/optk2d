@@ -1,12 +1,16 @@
-function b = A_fwd(x,F,parallelize)
-% x = image [N x N x Nt]
+function x = A_adj(b,F,parallelize)
+% b = kspace data [Nk x Nc x Nt]
 % F = NUFFT operators {[Nk x N^2] x Nt}
 % parallelize = option to parallelize the frame loop (0 or 1)
+    
+    % import functions
+    import recon.*
+    import tools.*
 
     if nargin < 3 | isempty(parallelize)
         parallelize = 0;
     end
-
+    
     % Get sizes
     N = F{1}.idim(1);
     Nk = F{1}.odim(1);
@@ -17,9 +21,10 @@ function b = A_fwd(x,F,parallelize)
     end
     Nt = length(F);
 
-    b = zeros(Nk,Nc,Nt);
+    x = zeros(N,N,Nt);
     parfor (n = 1:Nt, 100*parallelize) % loop through time points
-        b(:,:,n) = F{n}*x(:,:,n); % calculate NUFFT of image at time point n
+        xn = F{n}'*b(:,:,n); % calculate inverse NUFFT of ksignal at time point n
+        x(:,:,n) = reshape(xn,F{n}.idim);
     end
 
 end

@@ -11,7 +11,8 @@ function [x_star, cost, x_set] = tvrecon(klocs,kdata,varargin)
         'type', 'l1', ... % TV semi-norm type
         'niter', 100, ... % number of iterations
         'smap', [], ... % sensitivity map [N x Nc]
-        'parallelize', 0 ... % option to parallelize frame-wise recons
+        'parallelize', 0, ... % option to parallelize frame-wise recons
+        'show', 1 ... % show iterations of the recon as it happens
         );
 
     % parse arguments
@@ -77,7 +78,19 @@ function [x_star, cost, x_set] = tvrecon(klocs,kdata,varargin)
 
         % denoise the new image
         [x_new,P] = tvdenoise(x_new,arg.lam,P,arg.type,arg.niter);
-        
+
+        % check for nans
+        if any(isnan(x_new(:)))
+            error('nan values in x_new... try increasing L')
+        end
+
+        % display the image
+        if arg.show && mod(i,5)==0
+            im(abs(x_new));
+            title(sprintf('iter %d, λ = %.2g',i,arg.lam))
+            drawnow
+        end
+
         % calculate t_{k+1}
         t_k_1 = (1 + sqrt(1+4*t_k^2))/2;
 

@@ -8,20 +8,27 @@ function L = pwritr(A,At,sz,tol)
         tol = 1e-2;
     end
 
-    % generate a random image
     b_k = randn(sz);
+    Ab_k = real(At(A(b_k)));
+    norm_b_k = norm(Ab_k);
+
+    b = b_k;
+    L = real(b(:)'*Ab_k(:)/(b(:)'*b(:)));
     
-    for i = 1:10
-
-        % calculate A'A*b_k
-        b_k1 = At(A(b_k));
-        
-        % calculate the spectral radius
-        L = real(b_k'*b_k1/(b_k'*b_k));
-        
-        % renormalize the vector
-        b_k = b_k1 / norm(b_k1);
-
+    while 1
+    
+        b_k = Ab_k/norm_b_k;
+        Ab_k = real(At(A(b_k)));
+        norm_b_k_1 = norm(Ab_k);
+        if norm(norm_b_k_1-norm_b_k) <= tol
+            break
+        else
+            norm_b_k = norm_b_k_1;
+        end
+    
+        b = b_k;
+        L = real(b(:)'*Ab_k(:)/(b(:)'*b(:)));
+    
     end
 
 end

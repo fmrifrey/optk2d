@@ -67,7 +67,7 @@ title('ground truth')
 subplot(1,2,2)
 imagesc(kx_grid(:),ky_grid(:),log(abs(fftc(x_gt))+eps()))
 hold on
-plot(klocs(:,1),klocs(:,2),'--ko','MarkerFaceColor','r')
+plot(klocs(:,1),klocs(:,2),'--r.')
 xlabel('kx (cm^{-1})');
 ylabel('ky (cm^{-1})');
 hold off

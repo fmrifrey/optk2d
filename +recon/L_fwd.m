@@ -17,7 +17,11 @@ function x = L_fwd(P)
 
     % loop through dimensions
     for d = 1:nd
-        x = -(circshift(x,1,d) - P{d});
+
+        % calculate L(p,q)
+        % L(p,q)_i,j = p_i,j + q_i,j - p_i-1,j - q_i-1,j
+        x = x + circshift(P{d},d) - P{d};
+        
     end
 
 end

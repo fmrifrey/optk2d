@@ -1,5 +1,5 @@
-function spgr(kspace,varargin)
-% spgr sequence with arbitrary readout trajectory
+function fse(kspace,varargin)
+% fse sequence with arbitrary readout trajectory
 % written in toppe v6 by David Frey
 % kspace = kspace trajectory ([N x Nshots x 3] cm^-1)
 
@@ -16,16 +16,21 @@ arg.loadmat = 0; % option to load last used args and kspace from
 arg.ecdel = 'auto'; % eff echo time delay (# of samples from beginning of readout)
 arg.te = 'min'; % echo time (ms)
 arg.tr = 'min'; % repitition time (ms)
+arg.etl = 1; % echo train length (number of echoes per TR)
 
 arg.slabthk = 2; % slice thickness (cm)
 
-arg.rffa = 10; % tipdown flip angle (deg)
+arg.rffa = 90; % tipdown flip angle (deg)
 arg.rftbw = 8; % tipdown time-bandwidth product
-arg.rfdur = 3.2; % tipdown pulse duration (ms)
-arg.rfspoil = 1; % option to do rf spoiling
+arg.rfdur = 4.8; % tipdown pulse duration (ms)
+
+arg.rf2fa = 180; % refocuser flip angle (deg)
+arg.rf2tbw = 2; % refocuser time-bandwidth product
+arg.rf2dur = 1.6; % refocuser pulse duration (ms)
+
 arg.spoilcyc = 4; % number of phase cycles per voxel for gradient spoiling
 
-arg.dofatsat = 1; % option to dplay fat sat pulse before readout
+arg.dofatsat = 1; % option to play fat sat pulse before echo train
 arg.fsfa = 90; % fatsat flip angle (deg)
 arg.fstbw = 2; % fatsat time-bandwidth product
 arg.fsdur = 2.4; % fatsat pulse duration (ms)
@@ -62,6 +67,22 @@ toppe.writemod(sys, ...
     'nChop', [10,10], ...
     'ofname', 'tipdown.mod');
 
+% Create refocuser SLR pulse
+[rf2,gzrf2,rffreq2] = toppe.utils.rf.makeslr( ...
+    arg.rf2fa, ...
+    arg.slabthk, ...
+    arg.rf2tbw, ...
+    arg.rf2dur, ...
+    0, ...
+    sys, ...
+    'writeModFile', false ...
+    );
+toppe.writemod(sys, ...
+    'rf', rf2, ...
+    'gz', gzrf2, ...
+    'nChop', [10,10], ...
+    'ofname', 'refocuser.mod');
+
 % Create the fatsat SLR pulse
 fs = toppe.utils.rf.makeslr( ...
     arg.fsfa, ...
@@ -79,6 +100,11 @@ toppe.writemod(sys, ...
 
 % Generate the readout gradients
 nshots = size(kspace,2);
+if mod(nshots,arg.etl)
+    error('nshots must be divisible by etl')
+end
+ntrains = nshots/arg.etl;
+ept = nshots/ntrains; % echos per train
 [g,nramp] = gengrads(sys,kspace);
 gx = g(:,:,1);
 gy = g(:,:,2);
@@ -103,6 +129,7 @@ toppe.writemod(sys, ...
 
 % Calculate all module durations
 dur_tipdown = length(toppe.readmod('tipdown.mod'))*sys.raster + arg.padtime; % us
+dur_refocuser = length(toppe.readmod('refocuser.mod'))*sys.raster + arg.padtime; % us
 dur_fatsat = length(toppe.readmod('fatsat.mod'))*sys.raster + arg.padtime; % us
 dur_readout = length(toppe.readmod('readout.mod'))*sys.raster + arg.padtime; % us
 dur_crusher = length(toppe.readmod('crusher.mod'))*sys.raster + arg.padtime; % us
@@ -113,50 +140,71 @@ if strcmpi(arg.ecdel,'auto')
     fprintf('spgr auto ecdel: sample delay of %d detected from first shot\n', arg.ecdel);
 end
 
-% Calculate minimum echo time and tgap1
-[~,peakidx] = max(abs(rf)); % get rf peak sample
-minte = dur_tipdown - peakidx*sys.raster + ... % rf pulse duration (post-peak)
+% Calculate minte1 = minimum time from peak tipdown to echo center
+minte1 = dur_tipdown/2 + ... % tipdown pulse duration (post-peak)
+    dur_refocuser + ... % refocuser pulse duration
     arg.padtime + ... % some extra fluffiness
     (nramp(1) + arg.ecdel)*sys.raster; % effective echo delay (wrt start of readout)
-minte = minte*1e-3; % convert to ms
+minte1 = minte1 + 1-mod(minte1,sys.raster);
+minte1 = minte1*1e-3; % convert to ms
+
+% Calculate minte2 = minimum time from echo center to next echo center
+if arg.etl == 1
+    minte2 = 0;
+else
+    minte2 = dur_refocuser + ... % refocuser pulse duration
+        dur_readout + ... % readout length
+        arg.padtime; % some extra fluffiness
+end
+minte2 = minte2 + 1-mod(minte2,sys.raster);
+minte2 = minte2*1e-3; % convert to ms
+
+% Set min te
+minte = max(minte1,minte2);
 if strcmpi(arg.te,'min')
     arg.te = minte;
-    fprintf('spgr auto min te: effective echo time = %.3fms\n', arg.te);
+    fprintf('fse auto min te: effective echo time = %.3fms\n', arg.te);
 elseif (arg.te < minte)
     error('te (%.3fms) < minte (%.3fms)', arg.te, minte);
 end
-tgap1 = arg.te - minte;
-fprintf('spgr gap: gap time 1 = %.3fms\n', tgap1);
 
-% Calculate minimum repitition time and tgap2
+% Calculate gap times 1-3
+tgap1 = arg.te/2 - dur_tipdown*1e-3/2 - dur_refocuser*1e-3/2; % time between end of tipdown & start of refocuser
+tgap2 = arg.te/2 - dur_refocuser*1e-3/2 - (nramp(1) + arg.ecdel)*sys.raster*1e-3; % time between end of refocuser and beginning of readout
+tgap3 = arg.te/2 - (nramp(2) + size(kspace,1)-arg.ecdel)*sys.raster*1e-3 - ...
+    dur_refocuser*1e-3/2; % time between end of readout and beginning of next refocuser
+fprintf('fse gap: gap time 1/2/3 = %.3f/%.3f/%.3fms\n', tgap1, tgap2, tgap3);
+
+% Calculate minimum repitition time and tgap4
 mintr = arg.dofatsat*dur_fatsat + ... % fatsat (us)
-    dur_tipdown + ... % tipdown (us)
-    tgap1*1e3 + ... % gap 1 (us)
-    dur_readout + ... % readout (us)
-    dur_crusher; % crusher (us)
+    arg.te*1e3/2 + ... % tipdown + gap time (us)
+    arg.etl*arg.te*1e3; % refocuser + readout train (us)
 mintr = mintr*1e-3; % convert to ms
 if strcmpi(arg.tr,'min')
     arg.tr = mintr;
-    fprintf('spgr auto tr: repitition time = %.3fms\n', arg.tr);
+    fprintf('fse auto min tr: repitition time = %.3fms\n', arg.tr);
 elseif (arg.tr < mintr)
     error('tr (%.3fms) < mintr (%.3fms)', arg.tr, mintr);
 end
-tgap2 = arg.tr - mintr;
-fprintf('spgr gap: gap time 2 = %.3fms\n', tgap2);
+tgap4 = arg.tr - mintr;
+fprintf('fse gap: gap time 4 = %.3fms\n', tgap4);
 
 % Write entry file
 toppe.writeentryfile('toppeN.entry');
 
 % Set cores file entries
 toppe.writecoresfile( {...
-    [4,1,0], ... % tipdown
-    [2,4], ... % fatsat
-    [3,0] ... % readout
+    [1,0], ... % tipdown
+    [2,0], ... % refocuser
+    [3,5], ... % fatsat
+    [4,0], ... % readout
+    [1,0] ... % TR deadtime
     })
 
 % Set modules file text
 modulesfiletext = [ ...
     sprintf("tipdown.mod %d 1 0 -1", dur_tipdown)
+    sprintf("refocuser.mod %d 1 0 -1", dur_refocuser)
     sprintf("fatsat.mod %d 1 0 -1", dur_fatsat)
     sprintf("readout.mod %d 0 1 -1", dur_readout)
     sprintf("crusher.mod %d 0 0 -1", dur_crusher)
@@ -167,7 +215,7 @@ tools.writemodulesfile(modulesfiletext);
 
 %% Write the scan loop
 toppe.write2loop('setup',sys,'version',6);
-for shotn = 1-arg.ndisdaqs:nshots % loop through shots
+for trainn = 1-arg.ndisdaqs:ntrains % loop through trains
 
     % Write fatsat to loop
     if arg.dofatsat
@@ -177,21 +225,16 @@ for shotn = 1-arg.ndisdaqs:nshots % loop through shots
             'Gamplitude', [0;0;0], ...
             'version', 6, ...
             'trigout', 0, ...
-            'core', 2);
+            'core', 3);
 
         toppe.write2loop('crusher.mod', sys, ...
             'version', 6, ...
             'trigout', 0, ...
-            'core', 2);
+            'core', 3);
     end
 
     % Write tipdown to loop
-    toppe.write2loop('crusher.mod', sys, ...
-        'version', 6, ...
-        'trigout', 0, ...
-        'core', 1);
     toppe.write2loop('tipdown.mod', sys, ...
-        'RFspoil', arg.rfspoil, ...
         'RFoffset', rffreq, ...
         'RFphase', 0, ...
         'version', 6, ...
@@ -203,33 +246,54 @@ for shotn = 1-arg.ndisdaqs:nshots % loop through shots
         'textra', tgap1, ...
         'core', 1);
 
-    % Write readout to loop
-    if shotn > 0
-        toppe.write2loop('readout.mod', sys, ...
-            'RFspoil', arg.rfspoil, ...
-            'echo', 1, ...
-            'slice', 1, ...
-            'view', shotn, ...
-            'waveform', shotn, ...
-            'RFphase', 0, ...
+    for echon = 1:ept % loop through echoes
+
+        % Calculate shot index
+        shotn = (trainn-1)*ept + echon;
+
+        % Write refocuser to loop
+        toppe.write2loop('refocuser.mod', sys, ...
+            'RFoffset', rffreq2, ...
+            'RFphase', pi/2, ...
             'version', 6, ...
             'trigout', 0, ...
-            'dabmode', 'on', ...
-            'core', 3);
-    else
-        toppe.write2loop('readout.mod', sys, ...
-            'RFspoil', arg.rfspoil, ...
-            'version', 6, ...
-            'RFphase', 0, ...
-            'trigout', 0, ...
-            'dabmode', 'off', ...
-            'core', 3);
+            'core', 2);
+
+        % Write tgap2 to loop
+        toppe.write2loop('delay', sys, ...
+            'textra', tgap2, ...
+            'core', 2);
+
+        % Write readout to loop
+        if trainn > 0
+            toppe.write2loop('readout.mod', sys, ...
+                'RFphase', pi/2, ...
+                'echo', 1, ...
+                'slice', 1, ...
+                'view', shotn, ...
+                'waveform', shotn, ...
+                'version', 6, ...
+                'trigout', 0, ...
+                'dabmode', 'on', ...
+                'core', 4);
+        else
+            toppe.write2loop('readout.mod', sys, ...
+                'version', 6, ...
+                'trigout', 0, ...
+                'dabmode', 'off', ...
+                'core', 4);
+        end
+
+        % Write tgap3 to loop
+        toppe.write2loop('delay', sys, ...
+            'textra', tgap3, ...
+            'core', 4);
     end
 
-    % Write tgap2 to loop
+    % Write tgap4 to loop
     toppe.write2loop('delay', sys, ...
-        'textra', tgap2, ...
-        'core', 3);
+        'textra', tgap4, ...
+        'core', 5);
 
 end
 

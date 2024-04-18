@@ -3,7 +3,7 @@ function spgr(kspace,varargin)
 % written in toppe v6 by David Frey
 % kspace = kspace trajectory ([N x Nshots x 3] cm^-1)
 
-import tools.*
+import utl.*
 
 %% Set defaults
 if nargin < 1 || isempty(kspace)
@@ -163,7 +163,7 @@ modulesfiletext = [ ...
     ];
 
 % Write out cores and modules files
-tools.writemodulesfile(modulesfiletext);
+writemodulesfile(modulesfiletext);
 
 %% Write the scan loop
 toppe.write2loop('setup',sys,'version',6);

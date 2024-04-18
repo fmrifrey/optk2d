@@ -5,8 +5,8 @@ function L = pwritr(A,At,sz,tol)
 % tol = tolerance
 
     % import functions
-    import recon.*
-    import tools.*
+    import rec.*
+    import utl.*
 
     if nargin < 4 || isempty(tol)
         tol = 1e-2;

@@ -1,6 +1,6 @@
 % import functions
-import recon.*
-import tools.*
+import rec.*
+import utl.*
 
 % set parameters
 N = 256;

@@ -14,4 +14,4 @@ ncoils = size(p,2);
 klocs = reshape(kspace(1:ndat,:,1:2),[],1,2);
 kdata = reshape(permute(p(:,:,:,:,1:nshots),[1,5,2,3,4]),[],ncoils);
 
-[x,cost,x_set] = tvrecon(klocs,kdata,'fov',[24,24],'N',[128,128],'niter',100,'lam',0);
+[x,cost,x_set] = rec.tvrecon(klocs,kdata,'fov',[24,24],'N',[128,128],'niter',100,'lam',0);

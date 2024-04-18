@@ -2,8 +2,8 @@ function P = L_adj(x)
 % x = image of any dimensions
 
     % import functions
-    import recon.*
-    import tools.*
+    import rec.*
+    import utl.*
 
     % get size
     sz = size(x);

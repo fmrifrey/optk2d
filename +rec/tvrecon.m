@@ -3,8 +3,8 @@ function [x_star, cost, x_set] = tvrecon(klocs,kdata,varargin)
 % kdata = [Nk x Nc x Nt]
 
     % import functions
-    import recon.*
-    import tools.*
+    import rec.*
+    import utl.*
 
     % define defaults
     defaults = struct( ...
@@ -23,8 +23,8 @@ function [x_star, cost, x_set] = tvrecon(klocs,kdata,varargin)
     arg = vararg_pair(defaults,varargin);
     
     % import functions
-    import recon.*
-    import tools.*
+    import rec.*
+    import utl.*
 
     % convert N and fov to row vectors
     arg.N = arg.N(:)';

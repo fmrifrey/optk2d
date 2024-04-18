@@ -6,8 +6,8 @@ function [Y,P] = tvdenoise(v,lam,P,type,niter)
 % niter = max number of iterations
 
     % import functions
-    import recon.*
-    import tools.*
+    import rec.*
+    import utl.*
 
     % get size
     sz = size(v);

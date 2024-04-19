@@ -5,57 +5,66 @@ function [G,nramp] = gengrads(sys,kspace)
     % get gradient waveform w/o ramps
     gam = 4257.7; % Hz/G
     dt = sys.raster*1e-6; % s
-    g = 1/gam*diff(kspace,1)/dt; % G/cm
-    G = [];
+    g = 1/gam*padarray(diff(kspace,1)/dt,[1,0,0],0); % G/cm
     nramp = [0,0];
 
+    G = 0;
+    
     for shotn = 1:size(g,2)
 
         % get initial and final kspace and gradients
-        k0 = squeeze(kspace(1,shotn,:))';
-        kf = squeeze(kspace(end,shotn,:))';
-        gf = squeeze(g(end,shotn,:))';
+        k1 = squeeze(kspace(1,shotn,:))'; % 1 = start ramp
+        k2 = squeeze(kspace(end,shotn,:))'; % 2 = end ramp
 
-        % calculate kspace ramp up
-        if norm(k0,2) > 0
-            ramp1 = k0/norm(k0,2).*toppe.utils.trapwave2(norm(k0,2)/gam,sys.maxGrad,sys.maxSlew,sys.raster*1e-3)';
+        % form path start/end points
+        C1 = [zeros(1,3);k1];
+        C2 = [k2;zeros(1,3)];
+        
+        % calculate minimum time gradients
+        if norm(C1(1,:) - C1(2,:),2) > 0
+            [~,~,ramp1] = minTimeGradient(C1, [], 0, 0, ...
+                sys.maxGrad, sys.maxSlew, sys.raster*1e-3);
+            ramp1 = padarray(ramp1,[1,0],0,'post');
         else
             ramp1 = [];
         end
-
-        % ramp down the gradients at the end
-        ngramp = ceil(norm(gf,2)/(sys.maxSlew*1e3)/dt);
-        gramp = gf.*linspace(1-1/ngramp,0,ngramp)';
         
-        % update kspace
-        kf = kf + 0.5*dt*(ngramp-1).*gam*gf;
-
-        % calculate kspace ramp down
-        if norm(kf,2) > 0
-            ramp2 = -kf/norm(kf,2).*toppe.utils.trapwave2(norm(kf,2)/gam,sys.maxGrad,sys.maxSlew,sys.raster*1e-3)';
+        if norm(C2(1,:) - C2(2,:),2) > 0
+            [~,~,ramp2] = minTimeGradient(C2, [], 0, 0, ...
+                sys.maxGrad, sys.maxSlew, sys.raster*1e-3);
+            ramp2 = padarray(ramp2,[1,0],0,'pre');
         else
             ramp2 = [];
         end
-        ramp2 = [gramp;ramp2];
-
-        gshot = [ramp1;squeeze(g(:,shotn,:));ramp2];
-
-        % append to the end of the array
-        if ~isempty(G) && (size(gshot,1)>size(G,1))
-            G = cat(1,G,zeros(size(gshot,1)-size(G,1),size(G,2),size(G,3)));
-        elseif (size(gshot,1)<size(G,1))
-            gshot = cat(1,gshot,zeros(size(G,1)-size(gshot,1),3));
-        end
-        G = cat(2,G,permute(gshot,[1,3,2]));
-
+        
         % update ramp sizes
         if size(ramp1,1) > nramp(1)
+            G = padarray(G,[size(ramp1,1)-nramp(1),0,0],0,'pre');
             nramp(1) = size(ramp1,1);
+        else
+            ramp1 = padarray(ramp1,[nramp(1)-size(ramp1,1),0,0],0,'pre');
         end
+        
+        % update ramp2 size
         if size(ramp2,1) > nramp(2)
+            G = padarray(G,[size(ramp2,1)-nramp(2),0,0],0,'post');
             nramp(2) = size(ramp2,1);
+        else
+            ramp2 = padarray(ramp2,[nramp(2)-size(ramp2,1),0,0],0,'post');
         end
-
+        
+        
+        
+        % append the ramps
+        gshot = [ramp1;squeeze(g(:,shotn,:));ramp2];
+        
+        % append the gradients
+        if shotn == 1
+            G = reshape(gshot,[],1,3);
+        else
+            G = cat(2,G,reshape(gshot,[],1,3));
+        end
+        
     end
 
 end

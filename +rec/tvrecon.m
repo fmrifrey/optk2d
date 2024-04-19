@@ -35,9 +35,11 @@ function [x_star, cost, x_set] = tvrecon(klocs,kdata,varargin)
     Nd = size(klocs,3);
 
     % check SENSE map
-    if isempty(arg.smap)
+    if isempty(arg.smap) && size(kdata,3)>1
         warning('sense map is empty, compressing data to 1 coil...');
         kdata = ir_mri_coil_compress(kdata,'ncoil',1);
+        arg.smap = ones([arg.N,1]);
+    elseif isempty(arg.smap) && size(kdata,3)==1
         arg.smap = ones([arg.N,1]);
     end
 
@@ -45,7 +47,7 @@ function [x_star, cost, x_set] = tvrecon(klocs,kdata,varargin)
     F = cell(Nt,1);
     nufft_args = {arg.N, 6*ones(Nd,1), 2*arg.N, arg.N/2, 'table', 2^10, 'minmax:kb'};
     for n = 1:Nt
-        omega = pi*arg.fov./arg.N.*squeeze(klocs(:,n,:));
+        omega = pi^2*arg.fov./arg.N.*squeeze(klocs(:,n,:));
         F{n} = Gnufft(true(arg.N),cat(2,{omega},nufft_args)); % NUFFT
         F{n} = pipe_menon_dcf(F{n}) * F{n}; % density compensation
         F{n} = Asense(F{n},arg.smap); % sensitivity encoding

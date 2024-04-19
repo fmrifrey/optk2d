@@ -7,7 +7,7 @@ function x = A_adj(b,F,parallelize)
     import rec.*
     import utl.*
 
-    if nargin < 3 | isempty(parallelize)
+    if nargin < 3 || isempty(parallelize)
         parallelize = 0;
     end
     

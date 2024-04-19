@@ -21,5 +21,5 @@ end
 smap = mri_sensemap_denoise(cat(3,xc{:}),'niter',1);
 
 %% recon the image
-x = rec.tvrecon(reshape(kspace(:,:,1:nd),[],1,nd), reshape(raw,[],size(raw,3)), ...
-    'N',N*ones(1,nd),'fov',fov*ones(1,nd),'niter',0,'L',0.1,'smap',smap);
+[~,~,x] = rec.tvrecon(reshape(kspace(:,:,1:nd),[],1,nd), reshape(raw,[],size(raw,3)), ...
+    'N',N*ones(1,nd),'fov',fov*ones(1,nd),'niter',50,'L',0.1,'smap',smap);

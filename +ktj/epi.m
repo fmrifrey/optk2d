@@ -43,12 +43,19 @@ function ktraj = epi(sys,fov,N,varargin)
     
     % separate into shots
     for shotn = 1:arg.Ns
+        
+        % reset shot
         kshotn = kshot0;
-        kshotn(:,2) = kshotn(:,2) + N/Np/fov * floor((shotn-1)/2); % add shot offset
+        
         if mod(shotn,2) % odd shots - flip x and y
-            kshotn = -kshotn;
+            kshotn(:,1) = flip(-kshotn(:,1),2);
         end
+        
+        kshotn(:,2) = kshotn(:,2) + (shotn-1)*N/Np/fov; % apply phase encoding offset
+        
+        % save to matrix
         ktraj(:,shotn,:) = reshape(kshotn,[],1,3);
+        
     end
     
     % save trajectory

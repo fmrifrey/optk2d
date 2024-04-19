@@ -51,7 +51,7 @@ function ktraj = epi(sys,fov,N,varargin)
             kshotn(:,1) = flip(-kshotn(:,1),2);
         end
         
-        kshotn(:,2) = kshotn(:,2) + (shotn-1)*N/Np/fov; % apply phase encoding offset
+        kshotn(:,2) = kshotn(:,2) + (shotn-1)*arg.Ns/fov; % apply phase encoding offset
         
         % save to matrix
         ktraj(:,shotn,:) = reshape(kshotn,[],1,3);

@@ -3,8 +3,6 @@ function ktraj = radial(sys,fov,N,varargin)
 % fov = field of view (cm, scalar - assuming isotropic 2D)
 % N = matrix size (scalar - assuming isotropic 2D)
 
-    gam = 4257.7; % Hz/G
-
     % define defaults
     defaults = struct( ...
         'Ns', N, ... % number of spokes
@@ -18,23 +16,20 @@ function ktraj = radial(sys,fov,N,varargin)
     % define initial spoke
     switch arg.dir
         case 1 % center-out
-            C = [0,0,0;
-                0.5,0,0];
+            C = [linspace(0,0.5,N)',zeros(N,2)];
             dtheta = 360/arg.Ns;
         case 2 % out-center
-            C = [0.5,0,0;
-                0,0,0];
+            C = [linspace(0.5,0,N)',zeros(N,2)];
             dtheta = 360/arg.Ns;
         case 3 % out-out
-            C = [-0.5,0,0;
-                0.5,0,0];
+            C = [linspace(-0.5,0.5,N)',zeros(N,2)];
             dtheta = 180/arg.Ns;
         otherwise
             error('invalid direction');
     end
 
     % determine grad limit based on fov
-    Gmax_fov = 1/gam * 1/fov/(sys.raster*1e-6);
+    Gmax_fov = 1/(sys.gamma*1e-7) * 1/fov/(sys.raster*1e-3);
 
     % calculate first spoke with 
     spoke0 = minTimeGradient(N/fov*C, [], 0, 0, ...

@@ -9,7 +9,7 @@ function ktraj = radial(sys,fov,N,varargin)
     defaults = struct( ...
         'Ns', N, ... % number of spokes
         'dir', 1, ... % spoke direction (1 = center-out, 2 = out-center, 3 = out-out)
-        'save', 1 ... % saves an .h5 file in the current directory
+        'save', (nargout < 1) ... % saves an .h5 file in the current directory
         );
 
     % parse arguments
@@ -45,6 +45,12 @@ function ktraj = radial(sys,fov,N,varargin)
     for i = 1:arg.Ns
         spokei = spoke0*rotz(i*dtheta)';
         ktraj(:,i,:) = reshape(spokei,[],1,3);
+    end
+    
+    % save trajectory
+    if arg.save
+        h5create('./traj.h5','/ktraj',size(ktraj));
+        h5write('./traj.h5','/ktraj',ktraj);
     end
 
 end

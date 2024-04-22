@@ -31,7 +31,7 @@ function [G,nramp] = gengrads(sys,kspace,rtype)
                 sys.maxGrad, sys.maxSlew, sys.raster*1e-3);
             ramp1 = padarray(ramp1,[1,0],0,'post'); % add an extra dead sample
         elseif norm(k1,2) > 0 && strcmpi(rtype,'trap')
-            ramp1 = k1/norm(k1,2).*toppe.utils.trapwave2(norm(k1,2)/gam,sys.maxGrad,sys.maxSlew,dt*1e3)';
+            ramp1 = k1/norm(k1,2).*toppe.utils.trapwave2(norm(k1,2)/gam,sys.maxGrad,sys.maxSlew,sys.raster*1e-3)';
             ramp1 = padarray(ramp1,[1,0],0,'post');
         else
             ramp1 = [];
@@ -43,7 +43,6 @@ function [G,nramp] = gengrads(sys,kspace,rtype)
                 sys.maxGrad, sys.maxSlew, sys.raster*1e-3);
             ramp2 = padarray(ramp2,[1,0],0,'pre');
         elseif norm(k2,2) > 0 && strcmpi(rtype,'trap')
-            ramp2 = -k2/norm(k2,2).*toppe.utils.trapwave2(norm(k2,2)/gam,sys.maxGrad,sys.maxSlew,dt*1e3)';
             ramp2 = padarray(ramp2,[1,0],0,'pre');
         else
             ramp2 = [];

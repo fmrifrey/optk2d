@@ -6,15 +6,15 @@ function ktraj = epi(sys,fov,N,varargin)
     % define defaults
     defaults = struct( ...
         'Ns', [], ... % number of shots
-        'ya', 1, ... % y acceleration (downsampling) factor
-        'save', (nargout < 1) ... % saves an .h5 file in the current directory
+        'yacc', 1, ... % y acceleration (downsampling) factor
+        'save', (nargout < 1) ... % saves a .mat file in the current directory
         );
 
     % parse arguments
     arg = vararg_pair(defaults,varargin);
     
     % set number of phase encodes
-    Np = ceil(N/arg.ya);
+    Np = ceil(N/arg.yacc);
     
     % default - non epi (nshots = nphases)
     if isempty(arg.Ns)
@@ -35,6 +35,8 @@ function ktraj = epi(sys,fov,N,varargin)
     
     % determine grad limit based on fov
     Gmax_fov = 1/(sys.gamma*1e-7) * 1/fov/(sys.raster*1e-3);
+    
+    % generate trajectory for initial shot
     kshot0 = minTimeGradient(C_shot0, [], 0, 0, ...
         min(Gmax_fov,sys.maxGrad), sys.maxSlew, sys.raster*1e-3);
     
@@ -51,7 +53,7 @@ function ktraj = epi(sys,fov,N,varargin)
             kshotn(:,1) = flip(-kshotn(:,1),2);
         end
         
-        kshotn(:,2) = kshotn(:,2) + (shotn-1)*arg.Ns/fov; % apply phase encoding offset
+        kshotn(:,2) = kshotn(:,2) + (shotn-1)*arg.yacc/fov; % apply phase encoding offset
         
         % save to matrix
         ktraj(:,shotn,:) = reshape(kshotn,[],1,3);
@@ -60,8 +62,8 @@ function ktraj = epi(sys,fov,N,varargin)
     
     % save trajectory
     if arg.save
-        h5create('./traj.h5','/ktraj',size(ktraj));
-        h5write('./traj.h5','/ktraj',ktraj);
+        kspace = ktraj;
+        save kspace.mat kspace
     end
     
 end

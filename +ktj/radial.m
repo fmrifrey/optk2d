@@ -6,8 +6,8 @@ function ktraj = radial(sys,fov,N,varargin)
     % define defaults
     defaults = struct( ...
         'Ns', N, ... % number of spokes
-        'dir', 1, ... % spoke direction (1 = center-out, 2 = out-center, 3 = out-out)
-        'save', (nargout < 1) ... % saves an .h5 file in the current directory
+        'dir', 3, ... % spoke direction (1 = center-out, 2 = out-center, 3 = out-out)
+        'save', (nargout < 1) ... % saves a .mat file in the current directory
         );
 
     % parse arguments
@@ -31,7 +31,7 @@ function ktraj = radial(sys,fov,N,varargin)
     % determine grad limit based on fov
     Gmax_fov = 1/(sys.gamma*1e-7) * 1/fov/(sys.raster*1e-3);
 
-    % calculate first spoke with 
+    % calculate first spoke with mintgrad
     spoke0 = minTimeGradient(N/fov*C, [], 0, 0, ...
         min(sys.maxGrad,Gmax_fov), sys.maxSlew, sys.raster*1e-3);
 
@@ -44,8 +44,8 @@ function ktraj = radial(sys,fov,N,varargin)
     
     % save trajectory
     if arg.save
-        h5create('./traj.h5','/ktraj',size(ktraj));
-        h5write('./traj.h5','/ktraj',ktraj);
+        kspace = ktraj;
+        save kspace.mat kspace
     end
 
 end

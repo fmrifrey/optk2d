@@ -10,7 +10,7 @@ function [G,nramp] = gengrads(sys,kspace,rtype)
     % get gradient waveform w/o ramps
     gam = sys.gamma*1e-4; % Hz/G
     dt = sys.raster*1e-6; % s
-    g = 1/gam*padarray(diff(kspace,1)/dt,[1,0,0],0,'pre'); % G/cm
+    g = 1/gam*diff(kspace,1)/dt; % G/cm
     nramp = [0,0];
 
     G = 0;
@@ -26,13 +26,32 @@ function [G,nramp] = gengrads(sys,kspace,rtype)
         C2 = [k2;zeros(1,3)];
         
         % calculate ramp 1
+        g0 = squeeze(g(1,shotn,:));
+        g0 = g0(:)';
         if norm(k1,2) > 0 && strcmpi(rtype,'mint')
-            [~,~,ramp1] = minTimeGradient(C1, [], 0, 0, ...
+            [~,~,ramp1] = minTimeGradient(C1, [], g0, 0, ...
                 sys.maxGrad, sys.maxSlew, sys.raster*1e-3);
             ramp1 = padarray(ramp1,[1,0],0,'post'); % add an extra dead sample
         elseif norm(k1,2) > 0 && strcmpi(rtype,'trap')
-            ramp1 = k1/norm(k1,2).*toppe.utils.trapwave2(norm(k1,2)/gam,sys.maxGrad,sys.maxSlew,dt*1e3)';
-            ramp1 = padarray(ramp1,[1,0],0,'post');
+            
+            % ramp up the gradients
+            if norm(g0,2) > 0
+                ngramp = ceil(norm(g0,2)/(sys.maxSlew*1e3)/dt);
+                
+                % update kspace
+                k1 = k1 - 0.5*dt*(ngramp-1).*gam*g0;
+                
+                ramp1_pre = g0.*linspace(0,1-1/ngramp,ngramp)';
+            else
+                ramp1_pre = [];
+            end
+            
+            ramp1_trap = k1/norm(k1,2).*toppe.utils.trapwave2(norm(k1,2)/gam,sys.maxGrad,sys.maxSlew,dt*1e3)';
+            ramp1_trap = padarray(ramp1_trap,[1,0],0,'post');
+            
+             % combine
+            ramp1 = cat(1,ramp1_trap,ramp1_pre);
+            
         else
             ramp1 = [];
         end

@@ -30,7 +30,7 @@ end
 % generate the sampling trajectory
 load ./kspace.mat
 klocs = reshape(kspace(:,:,1:2),[],2);
-omega = pi*fov./N.*klocs;
+omega = 2*pi*fov./N.*klocs;
 
 % generate the fwd operator using NUFFT
 nufft_args = {N, [6,6], 2*N, N/2, 'table', 2^10, 'minmax:kb'};

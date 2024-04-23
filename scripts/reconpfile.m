@@ -10,6 +10,14 @@ raw = permute(p,[1,5,2,3,4]);
 raw = raw(end:-1:1,:,:);
 load kspace.mat
 
+if size(kspace,1) > size(raw,1)
+    warning('size(kspace,1) < size(raw,1)');
+    kspace = kspace(1:size(raw,1),:,:);
+elseif size(kspace,1) < size(raw,1)
+    warning('size(kspace,1) < size(raw,1)');
+    raw = raw(1:size(kspace,1),:,:);
+end
+
 %% generate SENSE map
 if ~isvar('smap')
     xc = cell(size(raw,3),1);

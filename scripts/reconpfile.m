@@ -10,6 +10,11 @@ raw = permute(p,[1,5,2,3,4]);
 raw = raw(end:-1:1,:,:);
 load kspace.mat
 
+% correct sizes
+if size(raw,2) > size(kspace,2)
+    raw = raw(:,2:end,:);
+end
+
 if size(kspace,1) > size(raw,1)
     warning('size(kspace,1) < size(raw,1)');
     kspace = kspace(1:size(raw,1),:,:);
@@ -29,7 +34,8 @@ if ~isvar('smap')
             fov*ones(1,nd), ...
             'niter',0,'L',0.1);
     end
-    smap = mri_sensemap_denoise(cat(3,xc{:}),'niter',1);
+    smap = bart('ecalib -b0 -m1', utl.fftc(cat(4,xc{:}),1:3));
+    smap = squeeze(smap);
     save smap.mat
 end
 
@@ -37,8 +43,8 @@ end
 [x,cost,x_set] = rec.tvrecon(reshape(kspace(:,:,1:nd),[],1,nd), reshape(raw,[],size(raw,3)), ...
     N*ones(1,nd), ...
     fov*ones(1,nd), ...
-    'niter', 200, ...
-    'L', 10^(-3.75), ...
+    'niter', 0, ...
+    'L', 10^(-3), ...
     'smap', smap, ...
     'show', 1);
 save recon.mat x cost x_set

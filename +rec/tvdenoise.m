@@ -19,7 +19,9 @@ function [Y,P] = tvdenoise(v,lam,P,type,niter)
     % set default P
     if isempty(P)
         for d = 1:nd
-            P{d} = eps()*ones(sz);
+            szp = sz;
+            szp(d) = szp(d)-1;
+            P{d} = eps()*ones(szp);
         end
     end
 
@@ -43,9 +45,9 @@ function [Y,P] = tvdenoise(v,lam,P,type,niter)
 
         % take a step towards negative of the gradient
         for d = 1:nd
-            P{d} = R{d} + 1/(12+lam)*Q{d};
+            P{d} = R{d} + 1/(12*lam)*Q{d};
         end
-
+        
         % calculate projection
         switch type
             case 'iso'
@@ -55,13 +57,13 @@ function [Y,P] = tvdenoise(v,lam,P,type,niter)
             otherwise
                 error('invalid type: %s',type);
         end
-
+        
         % calculate t_{k+1}
         t_k_1 = (1 + sqrt(1+4*t_k^2))/2;
 
         % update R
         for d = 1:nd
-            R{d} = P{d} + (t_k - 1)/t_k_1 * P{d}-P_old{d};
+            R{d} = P{d} + (t_k-1)/t_k_1 * (P{d} - P_old{d});
         end
 
         % calculate residual
@@ -69,7 +71,7 @@ function [Y,P] = tvdenoise(v,lam,P,type,niter)
         if (res < ep)
             break
         end
-
+        
     end
 
     % calculate Y
@@ -82,8 +84,10 @@ function P = proj_iso(P,sz,nd)
     % loop through dimensions
     A = zeros(sz); % root sum of squares
     for d = 1:nd
+        padsz = zeros(nd,1);
+        padsz(d) = 1;
         % add square of P to A
-        A = A + P{d}.^2;
+        A = A + padarray(P{d},padsz,0,'post').^2;
     end
 
     % take root of sum of squares
@@ -103,7 +107,7 @@ function P = proj_l1(P,nd)
     for d = 1:nd
         % divide P by absolute max
         Pd = P{d};
-        P{d} = P{d}/max(abs(Pd(:)));
+        P{d} = P{d}./max(abs(Pd),1);
     end
 
 end

@@ -17,14 +17,11 @@ function P = L_adj(x)
     
     % loop through dimensions
     for d = 1:nd
-        % get pad array
-        padsz = zeros(1,nd);
-        padsz(d) = 1;
 
         % calculate L'(x) = {p,q}
         % p_i,j = x_i,j - x_i+1,j
         % q_i,j = x_i,j - x_i,j+1
-        P{d} = padarray(-diff(x,1,d),padsz,0,'pre'); % neumann bndry cond - dx/d_end = 0
+        P{d} = -diff(x,1,d);
     end
 
 end

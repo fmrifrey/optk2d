@@ -18,7 +18,7 @@ fov = fov*ones(1,2);
 [x_grid,y_grid] = imgrid(fov,N);
 
 % simulate a sensitvity map
-ncoils = 4;
+ncoils = 32;
 if ncoils > 1
     smap = mri_sensemap_sim('nx', N(1), 'ny', N(2), ...
         'dx', fov(1)/N(1), 'dy', fov(2)/N(2), ...
@@ -36,25 +36,26 @@ omega = 2*pi*fov./N.*klocs;
 nufft_args = {N, [6,6], 2*N, N/2, 'table', 2^10, 'minmax:kb'};
 A = Gnufft(true(N),cat(2,{omega},nufft_args)); % NUFFT
 A = Asense(A,smap);
-
+%%
 % NUFFT the object - inverse crime k-space signal estimation
 snr = 1;
 kdata = A_fwd(x_gt,{A},0);
 kdata = awgn(kdata,snr);
 
 % recon
-niter = 100;
+niter = 200;
 tvtype = 'l1';
-lams = [0 1e-2];
+lams = [0,10.^(-3:1)];
 costs = zeros(niter+1,length(lams));
 xs = cell(niter+1,1);
 for i = 1:length(lams)
     fprintf('i=%d/%d\n',i,length(lams));
-    [~,costs(:,i),xs{i}] = tvrecon(reshape(klocs,[],1,2), kdata, ...
+    [~,costs(:,i),xs{i}] = tvnufftrec(reshape(klocs,[],1,2), kdata, ...
         N, fov, ...
         'smap', smap, 'niter', niter, ...
-        'lam', lams(i), 'type', tvtype, 'L', 5);
+        'lam', lams(i), 'type', tvtype, 'show', 1);
 end
+save test xs costs lams
 
 %% Make figures
 

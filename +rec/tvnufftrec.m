@@ -35,7 +35,7 @@ function [x_star, cost, x_set] = tvnufftrec(klocs,kdata,N,fov,varargin)
     Nd = size(klocs,3);
 
     % check SENSE map
-    if isempty(arg.smap) && size(kdata,3)>1
+    if isempty(arg.smap) && size(kdata,2)>1
         warning('sense map is empty, compressing data to 1 coil...');
         kdata = ir_mri_coil_compress(kdata,'ncoil',1);
         arg.smap = ones([N,1]);
@@ -59,7 +59,7 @@ function [x_star, cost, x_set] = tvnufftrec(klocs,kdata,N,fov,varargin)
 
     % calculate default L
     if isempty(arg.L)
-        arg.L = 1.1*pwritr(A,At,N);
+        arg.L = pwritr(A,At,N);
     end
 
     % recon the data

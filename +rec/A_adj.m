@@ -1,6 +1,6 @@
 function x = A_adj(b,F,parallelize)
 % b = kspace data [Nk x Nc x Nt]
-% F = NUFFT operators {[Nk x N^2] x Nt}
+% F = NUFFT operators {[Nk x N^Nd] x Nt}
 % parallelize = option to parallelize the frame loop (0 or 1)
     
     % import functions

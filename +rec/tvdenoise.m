@@ -30,7 +30,7 @@ function [Y,P] = tvdenoise(v,lam,P,type,niter)
     D = zeros(sz);
     t_k_1 = 1;
     ep = 1e-5;
-
+    
     % loop through iterations
     for i = 1:niter
     
@@ -41,11 +41,12 @@ function [Y,P] = tvdenoise(v,lam,P,type,niter)
 
         % compute gradient of objective fun
         D = v - lam*L_fwd(R);
+       
         Q = L_adj(D);
 
         % take a step towards negative of the gradient
         for d = 1:nd
-            P{d} = R{d} + 1/(12*lam)*Q{d};
+            P{d} = R{d} + 1/(4*nd*lam)*Q{d};
         end
         
         % calculate projection

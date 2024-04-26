@@ -43,11 +43,11 @@ kdata = A_fwd(x_gt,{A},0);
 kdata = awgn(kdata,snr);
 
 % recon
-niter = 200;
+niter = 100;
 tvtype = 'l1';
 lams = [0,10.^(-3:1)];
 costs = zeros(niter+1,length(lams));
-xs = cell(niter+1,1);
+xs = cell(length(lams)+1);
 for i = 1:length(lams)
     fprintf('i=%d/%d\n',i,length(lams));
     [~,costs(:,i),xs{i}] = tvnufftrec(reshape(klocs,[],1,2), kdata, ...
@@ -60,14 +60,14 @@ save test xs costs lams
 %% Make figures
 
 % create a figure showing k-space sampling pattern
-cfigopen('tvrecon(): k-space sampling')
+utl.cfigopen('tvrecon(): k-space sampling')
 subplot(1,2,1)
 imagesc(x_grid(:),y_grid(:),abs(x_gt));
 xlabel('x (cm)');
 ylabel('y (cm)');
 title('ground truth')
 subplot(1,2,2)
-imagesc(kx_grid(:),ky_grid(:),log(abs(fftc(x_gt))+eps()))
+imagesc(kx_grid(:),ky_grid(:),log(abs(utl.fftc(x_gt))+eps()))
 hold on
 plot(klocs(:,1),klocs(:,2),'--r.')
 xlabel('kx (cm^{-1})');
@@ -76,7 +76,7 @@ hold off
 title('k-space sampling');
 
 % create a figure showing grid of lambdas and iterations
-cfigopen('tvrecon(): λ sweep')
+utl.cfigopen('tvrecon(): λ sweep')
 nRMSE = @(x) 100*sqrt(mean((x/norm(x(:)) - x_gt/norm(x_gt(:))./(x/norm(x(:)))).^2,'all'));
 for i = 1:length(lams)
     x_set = xs{i};
@@ -89,7 +89,7 @@ for i = 1:length(lams)
 end
 
 % create a figure plotting the cost functions for each lamba
-cfigopen('tvrecon(): cost functions')
+utl.cfigopen('tvrecon(): cost functions')
 plot(costs);
 ylim([0 1.5*costs(1,1)])
 xlabel('iteration #');

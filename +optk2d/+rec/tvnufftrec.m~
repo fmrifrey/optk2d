@@ -25,11 +25,6 @@ function [x_star, cost, x_set] = tvnufftrec(klocs,kdata,N,fov,varargin)
     % get number of time points
     Nt = size(klocs,2);
     Nd = size(klocs,3);
-    
-    % remove center points
-    cmsk = vecnorm(klocs,2,3) == 0;
-    klocs(cmsk,:,:) = [];
-    kdata(cmsk,:,:) = [];
 
     % check SENSE map
     if isempty(arg.smap) && size(kdata,2)>1
@@ -46,7 +41,11 @@ function [x_star, cost, x_set] = tvnufftrec(klocs,kdata,N,fov,varargin)
     for n = 1:Nt
         omega = 2*pi*fov./N.*squeeze(klocs(:,n,:));
         F{n} = Gnufft(true(N),cat(2,{omega},nufft_args)); % NUFFT
-        W = optk2d.rec.pmdcf(F{n});
+        [W,w] = optk2d.rec.pmdcf(F{n},[],[],1);
+        D = vecnorm(klocs,2,3);
+        D = D./max(abs(D));
+        D = D.^2;
+        W = Gdiag(1-D);
         F{n} = W * F{n}; % density compensation
         F{n} = Asense(F{n},arg.smap); % sensitivity encoding
     end

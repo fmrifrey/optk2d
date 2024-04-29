@@ -1,8 +1,8 @@
 % set parameters
 N = 256*ones(1,2);
 fov = 24*ones(1,2);
-niter = 50;
-lams = [0,10.^(-2:1)];
+niter = 100;
+lams = [0,10.^(-2:0.5:1)];
 tvtype = 'l1';
 
 % simulate data
@@ -42,7 +42,7 @@ nRMSE = @(x) 100*sqrt(mean((x/norm(x(:)) - x_gt/norm(x_gt(:))./(x/norm(x(:)))).^
 
 % create a figure showing grid of lambdas and iterations
 optk2d.utl.cfigopen('testrecon(): λ sweep')
-costs = [];
+costs = zeros(niter+1,length(lams));
 for i = 1:length(lams)
     x_set = recons{i}.x_set;
     
@@ -59,7 +59,7 @@ for i = 1:length(lams)
     imagesc(abs(x_set(:,:,niter+1)))
     title(sprintf('λ = %.2g, %d itr\nnRMSE = %.2g%%',lams(i),niter+1,nRMSE(x_set(:,:,niter+1)))); axis off
     
-    costs = [costs,recons{i}.cost(:)];
+    costs(:,i) = recons{i}.cost(:);
 end
 
 % create a figure plotting the cost functions for each lamba

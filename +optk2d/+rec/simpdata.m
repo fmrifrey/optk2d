@@ -58,7 +58,7 @@ function [kspace,kdata,smap,x_gt] = simpdata(varargin)
     
     % create a figure showing k-space sampling pattern
     if arg.show && nd < 3
-        optk2d.utl.cfigopen('gendata(): k-space sampling')
+        optk2d.utl.cfigopen('simpdata(): k-space sampling')
         
         subplot(1,3,1)
         [x_grid,y_grid] = optk2d.utl.imgrid(arg.fov,arg.N);
@@ -95,6 +95,7 @@ function [kspace,kdata,smap,x_gt] = simpdata(varargin)
         xlabel('x (cm)');
         ylabel('y (cm)');
         
+        drawnow
     elseif arg.show
         warning('3d figures for gendata are not yet supported, sorry!\n');
     end

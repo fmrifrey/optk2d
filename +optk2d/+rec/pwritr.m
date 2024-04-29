@@ -5,8 +5,8 @@ function L = pwritr(A,At,sz,tol)
 % tol = tolerance
 
     % import functions
-    import rec.*
-    import utl.*
+    import optk2d.rec.*
+    import optk2d.utl.*
 
     if nargin < 4 || isempty(tol)
         tol = 1e-2;

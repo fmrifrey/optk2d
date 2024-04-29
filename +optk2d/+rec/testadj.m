@@ -63,7 +63,7 @@ for itr = 1:niter
 end
 
 % plot histogram of ratios
-utl.cfigopen('adjointness test')
+optk2d.utl.cfigopen('adjointness test')
 boxplot(ratios)
 ylabel("|<Ax,y>/<x,A'y>|")
 xticks([])

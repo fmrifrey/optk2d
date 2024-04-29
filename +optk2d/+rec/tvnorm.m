@@ -21,8 +21,8 @@ end
 function tv = tvnorm_iso(x)
 
     % import functions
-    import rec.*
-    import utl.*
+    import optk2d.rec.*
+    import optk2d.utl.*
 
     % get size
     sz = size(x);
@@ -49,8 +49,8 @@ end
 function tv = tvnorm_l1(x)
 
     % import functions
-    import rec.*
-    import utl.*
+    import optk2d.rec.*
+    import optk2d.utl.*
 
     % get size
     sz = size(x);

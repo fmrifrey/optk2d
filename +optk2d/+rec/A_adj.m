@@ -4,8 +4,8 @@ function x = A_adj(b,F,parallelize)
 % parallelize = option to parallelize the frame loop (0 or 1)
     
     % import functions
-    import rec.*
-    import utl.*
+    import optk2d.rec.*
+    import optk2d.utl.*
 
     if nargin < 3 || isempty(parallelize)
         parallelize = 0;

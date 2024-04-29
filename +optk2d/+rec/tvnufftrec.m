@@ -4,10 +4,6 @@ function [x_star, cost, x_set] = tvnufftrec(klocs,kdata,N,fov,varargin)
 % N = image dimensions [Nd x 1]
 % fov = field of view (inverse units of klocs), [Nd x 1]
 
-    % import functions
-    import rec.*
-    import utl.*
-
     % define defaults
     defaults = struct( ...
         'lam', 0, ... % lagrange multiplier for TV
@@ -21,10 +17,6 @@ function [x_star, cost, x_set] = tvnufftrec(klocs,kdata,N,fov,varargin)
 
     % parse arguments
     arg = vararg_pair(defaults,varargin);
-    
-    % import functions
-    import rec.*
-    import utl.*
 
     % convert N and fov to row vectors
     N = N(:)';
@@ -49,51 +41,25 @@ function [x_star, cost, x_set] = tvnufftrec(klocs,kdata,N,fov,varargin)
     for n = 1:Nt
         omega = 2*pi*fov./N.*squeeze(klocs(:,n,:));
         F{n} = Gnufft(true(N),cat(2,{omega},nufft_args)); % NUFFT
-        F{n} = pipe_menon_dcf(F{n}) * F{n}; % density compensation
+        F{n} = optk2d.rec.pmdcf(F{n}) * F{n}; % density compensation
         F{n} = Asense(F{n},arg.smap); % sensitivity encoding
     end
     
     % define the forward and adjoint operators A and At
-    A = @(x) A_fwd(x,F,arg.parallelize);
-    At = @(b) A_adj(b,F,arg.parallelize);
+    A = @(x) optk2d.rec.A_fwd(x,F,arg.parallelize);
+    At = @(b) optk2d.rec.A_adj(b,F,arg.parallelize);
 
     % calculate default L
     if isempty(arg.L)
-        arg.L = pwritr(A,At,N);
+        arg.L = optk2d.rec.pwritr(A,At,N);
     end
 
     % recon the data
-    [x_star,cost,x_set] = tvrecon(A,At,kdata, ...
+    [x_star,cost,x_set] = optk2d.rec.tvrecon(A,At,kdata, ...
         'lam', arg.lam, ...
         'L', arg.L, ...
         'type', arg.type, ...
         'niter', arg.niter, ...
         'show', arg.show);
 
-end
-
-function W = pipe_menon_dcf(F,itrmax)
-% F = NUFFT operator
-% itrmax = number of iterations
-
-    if nargin < 2 || isempty(itrmax)
-        itrmax = 15;
-    end
-
-    % initialize weights to 1 (psf)
-    w = ones(size(F,1),1);
-    
-    % loop through iterations
-    for itr = 1:itrmax
-        
-        % Pipe algorithm: W_{i+1} = W_{i} / (G * (G' * W_{i}))
-        d = real( F.arg.st.interp_table(F.arg.st, ...
-            F.arg.st.interp_table_adj(F.arg.st, w) ) );
-        w = w ./ d;
-        
-    end
-    
-    % normalize weights
-    w = w / sum(abs(w));
-    W = Gdiag(w);
 end

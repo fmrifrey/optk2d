@@ -16,8 +16,8 @@ function [x_star,cost,x_set] = tvrecon(A,At,b,varargin)
     arg = vararg_pair(defaults,varargin);
     
     % import functions
-    import rec.*
-    import utl.*
+    import optk2d.rec.*
+    import optk2d.utl.*
     
     % initialize
     P = [];

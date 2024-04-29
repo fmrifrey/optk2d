@@ -2,8 +2,8 @@ function x = L_fwd(P)
 % P = cell array of projection matrices for each dimension
 
     % import functions
-    import rec.*
-    import utl.*
+    import optk2d.rec.*
+    import optk2d.utl.*
     
     % get size
     sz = size(P{1});

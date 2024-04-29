@@ -2,8 +2,8 @@ function P = L_adj(x)
 % x = image of any dimensions
 
     % import functions
-    import rec.*
-    import utl.*
+    import optk2d.rec.*
+    import optk2d.utl.*
 
     % get size
     sz = size(x);

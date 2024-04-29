@@ -24,7 +24,7 @@ function ktraj = epi(sys,fov,N,varargin)
     end
     
     % generate cartesian x end points for each freq. encode
-    [Cx,Cy] = utl.imgrid(N/fov,[N,Np]);
+    [Cx,Cy] = optk2d.utl.imgrid(N/fov,[N,Np]);
     
     % calculate path points for first shot
     Cx_shot0 = Cx(:,1:arg.Ns:end); % index every Ns f encode

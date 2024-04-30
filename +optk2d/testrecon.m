@@ -2,7 +2,7 @@
 N = 256*ones(1,2);
 fov = 24*ones(1,2);
 niter = 100;
-lams = [0,10.^(-2:0.5:1)];
+lams = [0,0.05,0.1,0.5,1];
 tvtype = 'l1';
 
 % simulate data

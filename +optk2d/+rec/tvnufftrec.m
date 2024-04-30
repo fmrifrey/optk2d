@@ -12,6 +12,7 @@ function [x_star, cost, x_set] = tvnufftrec(klocs,kdata,N,fov,varargin)
         'niter', 100, ... % number of iterations
         'smap', [], ... % sensitivity map [N x Nc]
         'parallelize', 0, ... % option to parallelize frame-wise recons
+        'denscomp', 1, ... % option to perform sampling density compensation
         'show', 0 ... % show iterations of the recon as it happens
         );
 
@@ -41,8 +42,10 @@ function [x_star, cost, x_set] = tvnufftrec(klocs,kdata,N,fov,varargin)
     for n = 1:Nt
         omega = 2*pi*fov./N.*squeeze(klocs(:,n,:));
         F{n} = Gnufft(true(N),cat(2,{omega},nufft_args)); % NUFFT
-        W = optk2d.rec.pmdcf(F{n});
-        F{n} = W * F{n}; % density compensation
+        if arg.denscomp
+            W = Gdiag(vecnorm(omega,2,2)+0.3);% optk2d.rec.pmdcf(F{n});
+            F{n} = W * F{n}; % density compensation
+        end
         F{n} = Asense(F{n},arg.smap); % sensitivity encoding
     end
     

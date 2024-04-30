@@ -6,7 +6,7 @@ function [kspace,kdata,smap,x_gt] = simpdata(varargin)
         'N', 256*ones(1,2), ... % isotropic matrix size
         'fov', 24*ones(1,2), ... % isotropic fov
         'ncoils', 4, ... % number of coils to simulate
-        'snr', 1, ... % signal to noise ratio (see agwn.m)
+        'snr', inf, ... % signal to noise ratio (see agwn.m)
         'show', 1 ... % show the ground truth image and sampling scheme
         );
 

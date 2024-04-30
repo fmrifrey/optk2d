@@ -25,11 +25,6 @@ function [x_star, cost, x_set] = tvnufftrec(klocs,kdata,N,fov,varargin)
     % get number of time points
     Nt = size(klocs,2);
     Nd = size(klocs,3);
-    
-    % remove center points
-    cmsk = vecnorm(klocs,2,3) == 0;
-    klocs(cmsk,:,:) = [];
-    kdata(cmsk,:,:) = [];
 
     % check SENSE map
     if isempty(arg.smap) && size(kdata,2)>1

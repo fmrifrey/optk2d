@@ -55,8 +55,13 @@ function [x_star,cost,x_set] = tvrecon(A,At,b,varargin)
         % display the image
         if arg.show %&& mod(i,5)==0
             cfigopen('tvrecon(): iterative reconstruction');
-            subplot(2,1,1)
+            subplot(2,2,1)
             im(abs(x_new));
+            colormap parula
+            title(sprintf('iter %d, λ = %.2g',i,arg.lam))
+            subplot(2,2,2)
+            im(abs(optk2d.utl.fftc(x_new)));
+            colormap parula
             title(sprintf('iter %d, λ = %.2g',i,arg.lam))
             subplot(2,1,2)
             plot(cost(1:i))
